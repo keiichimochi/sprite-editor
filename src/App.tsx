@@ -38,9 +38,13 @@ function App() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx.drawImage(img, 0, 0);
+    // 画像サイズを4倍に設定するがナリ
+    canvas.width = img.width * 4;
+    canvas.height = img.height * 4;
+    
+    // 画像を4倍に拡大して描画するがナリ
+    ctx.imageSmoothingEnabled = false; // ピクセルをシャープに保つがナリ
+    ctx.drawImage(img, 0, 0, img.width * 4, img.height * 4);
   };
 
   const drawGrid = () => {
@@ -52,37 +56,38 @@ function App() {
 
     // Clear and redraw image
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(image, 0, 0);
+    ctx.imageSmoothingEnabled = false; // ピクセルをシャープに保つがナリ
+    ctx.drawImage(image, 0, 0, image.width * 4, image.height * 4);
 
     // Draw grid
     ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
     ctx.lineWidth = 1;
 
-    // 8ドット単位のグリッドを描画するがナリ
-    for (let x = 0; x < canvas.width; x += CURSOR_STEP) {
+    // 1ピクセル単位のグリッドを描画するがナリ（4倍サイズに対応）
+    for (let x = 0; x < canvas.width; x += 4) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, canvas.height);
       ctx.stroke();
     }
-    for (let y = 0; y < canvas.height; y += CURSOR_STEP) {
+    for (let y = 0; y < canvas.height; y += 4) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
 
-    // マウスの位置に合わせて選択枠を描画するがナリ
-    const x = Math.min(Math.max(0, mousePos.x - gridSize.width / 2), canvas.width - gridSize.width);
-    const y = Math.min(Math.max(0, mousePos.y - gridSize.height / 2), canvas.height - gridSize.height);
+    // マウスの位置に合わせて選択枠を描画するがナリ（4倍サイズに対応）
+    const x = Math.min(Math.max(0, mousePos.x - gridSize.width * 2), canvas.width - gridSize.width * 4);
+    const y = Math.min(Math.max(0, mousePos.y - gridSize.height * 2), canvas.height - gridSize.height * 4);
 
-    // 8ドット単位でスナップするがナリ
-    const snappedX = Math.floor(x / CURSOR_STEP) * CURSOR_STEP;
-    const snappedY = Math.floor(y / CURSOR_STEP) * CURSOR_STEP;
+    // 1ピクセル単位でスナップするがナリ（4倍サイズに対応）
+    const snappedX = Math.floor(x / 4) * 4;
+    const snappedY = Math.floor(y / 4) * 4;
 
-    // 選択枠を描画するがナリ
+    // 選択枠を描画するがナリ（4倍サイズに対応）
     ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
-    ctx.strokeRect(snappedX, snappedY, gridSize.width, gridSize.height);
+    ctx.strokeRect(snappedX, snappedY, gridSize.width * 4, gridSize.height * 4);
 
     // マウスカーソルを描画するがナリ
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
@@ -99,11 +104,12 @@ function App() {
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const scale = canvas.width / rect.width; // キャンバスのスケールを計算するがナリ
-    
-    // マウス座標をキャンバスの実際のサイズに合わせて調整するがナリ
-    const x = (event.clientX - rect.left) * scale;
-    const y = (event.clientY - rect.top) * scale;
+    const containerDiv = canvas.parentElement;
+    if (!containerDiv) return;
+
+    // スクロール位置を考慮してマウス座標を計算するがナリ
+    const x = event.clientX - rect.left + containerDiv.scrollLeft;
+    const y = event.clientY - rect.top + containerDiv.scrollTop;
 
     setMousePos({ x, y });
   };
@@ -130,13 +136,13 @@ function App() {
 
     const canvas = canvasRef.current;
     
-    // マウスの位置に合わせて選択枠の位置を計算するがナリ
-    const x = Math.min(Math.max(0, mousePos.x - gridSize.width / 2), canvas.width - gridSize.width);
-    const y = Math.min(Math.max(0, mousePos.y - gridSize.height / 2), canvas.height - gridSize.height);
+    // マウスの位置に合わせて選択枠の位置を計算するがナリ（4倍サイズに対応）
+    const x = Math.min(Math.max(0, mousePos.x - gridSize.width * 2), canvas.width - gridSize.width * 4);
+    const y = Math.min(Math.max(0, mousePos.y - gridSize.height * 2), canvas.height - gridSize.height * 4);
 
-    // 8ドット単位でスナップするがナリ
-    const snappedX = Math.floor(x / CURSOR_STEP) * CURSOR_STEP;
-    const snappedY = Math.floor(y / CURSOR_STEP) * CURSOR_STEP;
+    // 1ピクセル単位でスナップするがナリ（4倍サイズに対応）
+    const snappedX = Math.floor(x / 4) * 4;
+    const snappedY = Math.floor(y / 4) * 4;
 
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = gridSize.width;
@@ -146,7 +152,7 @@ function App() {
 
     ctx.drawImage(
       image,
-      snappedX, snappedY, gridSize.width, gridSize.height,
+      snappedX / 4, snappedY / 4, gridSize.width / 4, gridSize.height / 4,  // 元の画像の座標を4で割って元のサイズに戻すがナリ
       0, 0, gridSize.width, gridSize.height
     );
 
@@ -155,7 +161,7 @@ function App() {
       if (!blob) return;
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `sprite_${snappedX}_${snappedY}.png`;
+      link.download = `sprite_${snappedX / 4}_${snappedY / 4}.png`;  // 座標を4で割って元のサイズに戻すがナリ
       link.click();
     });
   };
@@ -167,8 +173,8 @@ function App() {
   }, [mousePos, gridSize, image]);
 
   return (
-    <div className="App">
-      <div className="controls">
+    <div className="App" style={{ padding: '20px' }}>
+      <div className="controls" style={{ marginBottom: '20px' }}>
         <input type="file" accept="image/*" onChange={handleImageUpload} />
         <div className="grid-controls">
           <button onClick={() => handleGridSizeChange(8, 8)}>8x8</button>
@@ -204,12 +210,26 @@ function App() {
           </div>
         </div>
       </div>
-      <canvas
-        ref={canvasRef}
-        onMouseMove={handleMouseMove}
-        onClick={handleCanvasClick}
-        style={{ border: '1px solid black' }}
-      />
+      <div style={{ 
+        overflow: 'auto', 
+        maxWidth: '100%', 
+        maxHeight: 'calc(100vh - 200px)',
+        border: '1px solid #ccc',
+        padding: '10px',
+        position: 'relative'
+      }}>
+        <canvas
+          ref={canvasRef}
+          onMouseMove={handleMouseMove}
+          onClick={handleCanvasClick}
+          style={{ 
+            imageRendering: 'pixelated',
+            display: 'block',
+            margin: '0 auto',
+            maxWidth: 'none'
+          }}
+        />
+      </div>
     </div>
   );
 }
