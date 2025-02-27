@@ -10,9 +10,12 @@ dist = "build"
 [site]
 bucket = "./build"
 
+# Cloudflare Pages用の設定
+pages_build_output_dir = "build"
+
 [env.production]
 name = "sprite-editor"
-route = "sprite-editor.pages.dev/*"
+route = "d8a4eab3.sprite-editor.pages.dev/*"
 
 # 開発環境用の設定
 [env.development]
