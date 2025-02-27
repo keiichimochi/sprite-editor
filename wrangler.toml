@@ -1,0 +1,19 @@
+name = "sprite-editor"
+type = "javascript"
+account_id = "b5aa681e4d8b90e90b202d92cdf026db"
+compatibility_date = "2024-03-26"
+
+[build]
+command = "npm run build"
+dist = "build"
+
+[site]
+bucket = "./build"
+
+[env.production]
+name = "sprite-editor"
+route = "sprite-editor.pages.dev/*"
+
+# 開発環境用の設定
+[env.development]
+name = "sprite-editor-dev" 
